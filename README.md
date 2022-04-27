@@ -9,7 +9,7 @@ Playground: https://ai-board.vercel.app/
 ### Dependencies
 
 - Git
-- Node.js (v14 or above)
+- Node.js (v16.14.0 or above)
 - Yarn (v2 or above)
 
 ### Setup
