@@ -8,7 +8,7 @@ export default class TTT extends StreakGame {
       width: 3,
       height: 3,
       winAt: 3,
-      boardType: "box"
+      boardType: "box",
     });
     makeObservable(this);
   }

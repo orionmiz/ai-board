@@ -10,7 +10,15 @@ export enum PlayerColor {
 
 export type GameProps = Pick<Game, "name" | "width" | "height" | "boardType">;
 
-export default abstract class Game {
+export interface BaseResult {
+  end: boolean;
+}
+
+export default abstract class Game<
+  Result extends BaseResult = {
+    end: boolean;
+  }
+> {
   @o name: string;
   @o width: number;
   @o height: number;
@@ -24,6 +32,7 @@ export default abstract class Game {
     y: number;
   }[] = [];
   @o turn = 1;
+  @o winner: PlayerColor | undefined;
 
   constructor({ name, width, height, boardType }: GameProps) {
     this.name = name;
@@ -31,9 +40,7 @@ export default abstract class Game {
     this.height = height;
     this.boardType = boardType;
 
-    this.board = Array(height)
-      .fill(0)
-      .map(() => Array(width).fill(0));
+    this.board = Game.makeBoard(width, height);
 
     makeObservable(this);
   }
@@ -50,10 +57,8 @@ export default abstract class Game {
 
   @action
   clear() {
-    this.board = Array(this.height)
-      .fill(0)
-      .map(() => Array(this.width).fill(0));
     this.steps = [];
+    this.board = Game.makeBoard(this.width, this.height);
     this.state = "idle";
   }
 
@@ -63,20 +68,37 @@ export default abstract class Game {
     this.board[y][x] = player;
     this.turn++;
 
-    if (this.state === 'idle') {
+    if (this.state === "idle") {
       this.state = "playing";
     }
 
     if (player === this.playerColor) {
       //this.stepAI();
     }
+
+    const result = this.checkWin(x, y);
+
+    if (result.end) {
+      this.winner = player;
+      this.state = "end";
+
+      this.disposeGame(result);
+    }
   }
+
+  // check whether the game is over or not
+  protected abstract checkWin(x: number, y: number): Result;
+
+  // define the actions to take after the game is over
+  protected abstract disposeGame(info: Result): void;
 
   @action
   stepBack() {
     const { x, y } = this.steps.pop() || { x: 0, y: 0 };
     this.board[y][x] = 0;
     this.turn--;
+
+    if (this.state === "end") this.state = "playing";
   }
 
   @action
@@ -124,5 +146,11 @@ export default abstract class Game {
       }
     }
     return moves;
+  }
+
+  static makeBoard(width: number, height: number) {
+    return Array(height)
+      .fill(0)
+      .map(() => Array(width).fill(0));
   }
 }

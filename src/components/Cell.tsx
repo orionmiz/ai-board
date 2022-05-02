@@ -1,5 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { BoardType } from "~/lib/game";
+import StreakGame from "~/lib/game/StreakGame";
 import useGame from "../hooks/useGame";
 import Stone from "./Stone";
 
@@ -10,20 +11,24 @@ function Cell({ x, y, type }: { x: number; y: number; type: BoardType }) {
 
   const cross = type === "cross";
 
+  const highlighted = game instanceof StreakGame && game.streaks[y][x];
+
   return (
     <>
       <div
+        className="cell"
         onClick={() => {
           console.log("clicked: ", x, y, game.playerColor);
-          if (game.canStep(x, y)) {
+          if (game.state !== "end" && game.canStep(x, y)) {
             game.step(x, y, game.playerColor);
           }
         }}
       >
         {stone > 0 && <Stone color={stone} />}
       </div>
+
       <style jsx>{`
-        div {
+        .cell {
           width: 90%;
           height: 90%;
           grid-column: ${cross ? x * 2 + 1 : x + 1} / span ${cross ? 2 : 1};
@@ -35,8 +40,10 @@ function Cell({ x, y, type }: { x: number; y: number; type: BoardType }) {
           display: flex;
           justify-content: center;
           align-items: center;
+
+          border: ${highlighted ? "3px" : "0"} solid green;
         }
-        div:hover {
+        .cell:hover {
           background-color: ${game.canStep(x, y) ? "green" : "inherit"};
           opacity: ${game.canStep(x, y) ? "0.5" : "1"};
         }
